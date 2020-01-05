@@ -23,7 +23,7 @@ var requireWithTimestamp = requireUtils.requireWithTimestamp;
 
 */
 
-function mmtuneStatus (status) {
+function mmtuneStatus (status, cwd, mmtune_input) {
     var mmtune = requireWithTimestamp(cwd + mmtune_input);
     if (mmtune) {
         if (mmtune.scanDetails && mmtune.scanDetails.length) {
@@ -35,7 +35,7 @@ function mmtuneStatus (status) {
     }
 }
 
-function preferencesStatus (status) {
+function preferencesStatus (status, cwd ,preferences_input) {
     var preferences = requireWithTimestamp(cwd + preferences_input);
     if (preferences) {
       status.preferences = preferences;
@@ -47,7 +47,7 @@ function preferencesStatus (status) {
     }
 }
 
-function uploaderStatus (status) {
+function uploaderStatus (status, cwd, uploader_input) {
     var uploader = require(cwd + uploader_input);
     if (uploader) {
         if (typeof uploader === 'number') {
@@ -78,9 +78,15 @@ if (!module.parent) {
         })
         .strict(true)
         .help('help');
-
     var params = argv.argv;
     var inputs = params._;
+    
+    ns_status(inputs, params.preferences, params.uploader);
+}
+
+function ns_status(inputs, preferences_input, uploader_input) {
+    //var params = argv.argv;
+    //var inputs = params._;
     var clock_input = inputs[0];
     var iob_input = inputs[1];
     var suggested_input = inputs[2];
@@ -89,8 +95,8 @@ if (!module.parent) {
     var reservoir_input = inputs[5];
     var status_input = inputs[6];
     var mmtune_input = inputs[7];
-    var preferences_input = params.preferences;
-    var uploader_input = params.uploader;
+    //var preferences_input = params.preferences;
+    //var uploader_input = params.uploader;
 
     if (inputs.length < 7 || inputs.length > 8) {
         argv.showHelp();
@@ -142,19 +148,20 @@ if (!module.parent) {
                 battery: safeRequire(cwd + battery_input),
                 reservoir: safeRequire(cwd + reservoir_input),
                 status: requireWithTimestamp(cwd + status_input)
-            }
+            },
+            created_at: new Date()
         };
 
         if (mmtune_input) {
-            mmtuneStatus(status);
+            mmtuneStatus(status, cwd, mmtune_input);
         }
 
         if (preferences_input) {
-            preferencesStatus(status);
+            preferencesStatus(status, cwd ,preferences_input);
         }
 
         if (uploader_input) {
-            uploaderStatus(status);
+            uploaderStatus(status, cwd, uploader_input);
         }
 
         console.log(JSON.stringify(status));
