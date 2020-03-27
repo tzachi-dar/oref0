@@ -31,6 +31,11 @@ var process_exit = function process_exit(final_result, ret) {
     final_result.return_val = ret;
 }
 
+var handle_exception = function handle_exception(final_result, function_name, exception) {
+    process_exit(final_result, 1);
+    console_error(final_result, "Error executing", function_name, ':', exception, '\n', exception.stack, '\n');
+}
+
 var initFinalResults = function initFinalResults() {
     var final_result = {
         stdout: ''
@@ -46,5 +51,6 @@ module.exports = {
     console_log : console_log,
     console_error : console_error,
     process_exit : process_exit,
+    handle_exception: handle_exception,
     initFinalResults : initFinalResults
 }

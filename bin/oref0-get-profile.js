@@ -26,15 +26,14 @@ var process_exit = shared_node_utils.process_exit;
 var initFinalResults = shared_node_utils.initFinalResults;
 
 function exportDefaults (final_result) {
-	var defaults = generate.displayedDefaults(final_result);
-	console_log(final_result, JSON.stringify(defaults, null, '\t'));
+    var defaults = generate.displayedDefaults(final_result);
+    console_log(final_result, JSON.stringify(defaults, null, '\t'));
 }
 
 function updatePreferences (final_result, prefs) {
-	var defaults = generate.displayedDefaults(final_result);
-	
-	// check for any displayedDefaults missing from current prefs and add from defaults
-	
+    var defaults = generate.displayedDefaults(final_result);
+    
+    // check for any displayedDefaults missing from current prefs and add from defaults
     for (var pref in defaults) {
       if (defaults.hasOwnProperty(pref) && !prefs.hasOwnProperty(pref)) {
         prefs[pref] = defaults[pref];

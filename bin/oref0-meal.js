@@ -47,7 +47,7 @@ var oref0_meal = function oref0_meal(final_result, argv_params) {
     if (inputs.length < 5 || inputs.length > 6) {
         argv.showHelp();
         console_log(final_result, '{ "carbs": 0, "reason": "Insufficient arguments" }');
-        process_exit(1);
+        process_exit(final_result, 1);
         return;
     }
 
@@ -133,8 +133,7 @@ var oref0_meal = function oref0_meal(final_result, argv_params) {
         recentCarbs.mealCOB = 0;
         recentCarbs.reason = "not enough glucose data to calculate carb absorption";
     }
-
-    console_log(final_result, recentCarbs);
+    console_log(final_result,  JSON.stringify(recentCarbs));
 }
 
 if (!module.parent) {

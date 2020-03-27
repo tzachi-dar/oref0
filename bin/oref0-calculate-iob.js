@@ -20,14 +20,18 @@
 
 var generate = require('../lib/iob');
 var fs = require('fs');
-function usage ( ) {
-    console.log('usage: ', process.argv.slice(0, 2), '<pumphistory-zoned.json> <profile.json> <clock-zoned.json> [autosens.json] [pumphistory-24h-zoned.json]');
-
+var shared_node_utils = require('./oref0-shared-node-utils');
+var console_error = shared_node_utils.console_error;
+var console_log = shared_node_utils.console_log;
+var process_exit = shared_node_utils.process_exit;
+var initFinalResults = shared_node_utils.initFinalResults;
+function usage (final_result ) {
+    console_log(final_result, 'usage: ', process.argv.slice(0, 2), '<pumphistory-zoned.json> <profile.json> <clock-zoned.json> [autosens.json] [pumphistory-24h-zoned.json]');
 }
 
 
 
-var oref0_calculate_iob = function oref0_calculate_iob(argv_params) {  
+var oref0_calculate_iob = function oref0_calculate_iob(final_result, argv_params) {  
   var argv = require('yargs')(argv_params)
     .usage("$0 <pumphistory-zoned.json> <profile.json> <clock-zoned.json> [<autosens.json>] [<pumphistory-24h-zoned.json>]")
     .strict(true)
@@ -38,8 +42,8 @@ var oref0_calculate_iob = function oref0_calculate_iob(argv_params) {
 
   if (inputs.length < 3 || inputs.length > 5) {
     argv.showHelp()
-    console.error('Incorrect number of arguments');
-    process.exit(1);
+    console_error(final_result, 'Incorrect number of arguments');
+    process_exit(final_result, 1);
   }
 
   var pumphistory_input = inputs[0];
@@ -58,7 +62,7 @@ var oref0_calculate_iob = function oref0_calculate_iob(argv_params) {
     try {
         autosens_data = JSON.parse(fs.readFileSync(cwd + '/' + autosens_input));
     } catch (e) {}
-    //console.error(autosens_input, JSON.stringify(autosens_data));
+    //console_error(final_result, autosens_input, JSON.stringify(autosens_data));
   }
   var pumphistory_24_data = null;
   if (pumphistory_24_input) {
@@ -80,16 +84,21 @@ var oref0_calculate_iob = function oref0_calculate_iob(argv_params) {
   }
 
   var iob = generate(inputs);
-  return(JSON.stringify(iob));
+  console_log(final_result, JSON.stringify(iob));
 }
 
 if (!module.parent) {
+   var final_result = initFinalResults();
    // remove the first parameter.
    var command = process.argv;
    command.shift();
    command.shift();
-   var result = oref0_calculate_iob(command)
-   console.log(result);
+   oref0_calculate_iob(final_result, command)
+   console.log(final_result.stdout);
+   if(final_result.err.length > 0) {
+       console.error(final_result.err);
+   }
+   process.exit(final_result.return_val);
 }
 
 exports = module.exports = oref0_calculate_iob

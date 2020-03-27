@@ -14,6 +14,7 @@ var requireUtils = require('../lib/require-utils');
 var shared_node_utils = require('./oref0-shared-node-utils');
 var console_error = shared_node_utils.console_error;
 var console_log = shared_node_utils.console_log;
+var handle_exception = shared_node_utils.handle_exception;
 var initFinalResults = shared_node_utils.initFinalResults;
 
 function createRetVal(stdout, return_val) {
@@ -84,8 +85,6 @@ function serverListen() {
 
             command = command.map(s => s.trim());
 
-            var result = 'unknown command\n';
-
             console.log('command = ', command);
             var async_command = false;
             var final_result = initFinalResults();
@@ -94,52 +93,48 @@ function serverListen() {
                 // remove the first parameter.
                 command.shift();
                 try {
-                    result = ns_status(command);
+                    let result = ns_status(command);
                     result = addNewlToResult(result);
                     final_result = createRetVal(result, 0);
                 } catch (err) {
-                    final_result.return_val = 1;
-                    console.log('exception when parsing ns_status ', err);
-                    console_err(final_result, 'exception when parsing ns_status ', err);
+                    handle_exception(final_result, 'ns-status', err);
+                    console.log('exception when parsing ns-status ', err);
                 }
             } else if (command[0] == 'oref0-normalize-temps') {
                 command.shift();
                 try {
-                    result = oref0_normalize_temps(command);
+                    let result = oref0_normalize_temps(command);
                     result = addNewlToResult(result);
                     final_result = createRetVal(result, 0);
                 } catch (err) {
-                    final_result.return_val = 1;
+                    handle_exception(final_result, 'oref0-normalize-temps', err);
                     console.log('exception when parsing oref0-normalize-temps ', err);
                 }
             } else if (command[0] == 'oref0-calculate-iob') {
                 command.shift();
                 try {
-                    result = oref0_calculate_iob(command);
-                    result = addNewlToResult(result);
-                    final_result = createRetVal(result, 0);
+                    oref0_calculate_iob(final_result, command);
+                    addNewlToFinalResult(final_result);
                 } catch (err) {
-                    final_result.return_val = 1;
+                    handle_exception(final_result, 'oref0-calculate-iob', err);
                     console.log('exception when parsing oref0-calculate-iob ', err);
                 }
             }  else if (command[0] == 'oref0-meal') {
                 command.shift();
                 try {
-                    result = oref0_meal(final_result, command);
-                    final_result.stdout = addNewlToResult(final_result.stdout); // put them both in a new function ????????????
-                    final_result.err = addNewlToResult(final_result.err);
+                    oref0_meal(final_result, command);
+                    addNewlToFinalResult(final_result);
                 } catch (err) {
-                    final_result.return_val = 1;
+                    handle_exception(final_result, 'oref0-meal', err);
                     console.log('exception when parsing oref0-meal ', err);
                 }
             } else if (command[0] == 'oref0-get-profile') {
                 command.shift();
                 try {
                     oref0_get_profile(final_result, command);
-                    final_result.stdout = addNewlToResult(final_result.stdout); // put them both in a new function ????????????
-                    final_result.err = addNewlToResult(final_result.err);
+                    addNewlToFinalResult(final_result);
                 } catch (err) {
-                    final_result.return_val = 1;
+                    handle_exception(final_result, 'oref0-get-profile', err);
                     console.log('exception when parsing oref0-get-profile ', err);
                 }
             } else if (command[0] == 'oref0-get-ns-entries') {
@@ -148,36 +143,37 @@ function serverListen() {
                 var final_result = initFinalResults();
                 function print_callback(final_result) {
                     try {
-                        final_result.stdout = addNewlToResult(final_result.stdout); // put them both in a new function ????????????
-                        final_result.err = addNewlToResult(final_result.err);
+                        addNewlToFinalResult(final_result);
                         s.write(JSON.stringify(final_result));
                         s.end();
                     } catch (err) {
                         // I assume here that error happens when handeling the socket, so not trying to close it
+                        andle_exception(final_result, 'print_callback', err);
                         console.log('exception in print_callback ', err);
                     }
                 }
                 command.shift();
                 try {
-                    result = oref0_get_ns_entries(command, print_callback, final_result);
-                    result = addNewlToResult(result);
+                    oref0_get_ns_entries(command, print_callback, final_result);
+                    // output of this function is asyncronious.
                 } catch (err) {
-                    final_result.return_val = 1;
-                    console.log('exception when parsing oref0-get-profile ', err);
+                    handle_exception(final_result, 'oref0_get_ns_entries', err);
+                    console.log('exception when parsing oref0_get_ns_entries ', err);
                 }
             } else if (command[0] == 'ping') {
-                result = 'pong';
+                let result = 'pong';
                 final_result = createRetVal(result, 0);
             } else if (command[0] == 'json') {
                 // remove the first parameter.
                 command.shift();
                 try {
-                    var return_val;
+                    let return_val;
+                    let result;
                     [result, return_val] = jsonWrapper(command);
                     result = addNewlToResult(result);
                     final_result = createRetVal(result, return_val);
                 } catch (err) {
-                    final_result.return_val = 1;
+                    handle_exception(final_result, 'oref0-get-profile', err);
                     console.log('exception when running json_wrarpper ', err);
                 }
             } else {
@@ -220,6 +216,11 @@ function addNewlToResult(result) {
         result += "\n";
     }
     return result;
+}
+
+function addNewlToFinalResult(final_result) {
+    final_result.stdout = addNewlToResult(final_result.stdout);
+    final_result.err = addNewlToResult(final_result.err);
 }
 
 // The goal is to run something like:
