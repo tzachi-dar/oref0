@@ -117,6 +117,7 @@ function ns_temptargets {
     
     dir_name=~/test_data/oref0-get-profile-ns/$(date +"%Y-%m-%d-%H%M")
     echo dir_name = $dir_name
+    mkdir -p $dir_name
     cp  settings/settings.json settings/bg_targets.json settings/insulin_sensitivities.json settings/basal_profile.json preferences.json settings/carb_ratios.json settings/temptargets.json settings/model.json settings/autotune.json $dir_name
     
     oref0-get-profile settings/settings.json settings/bg_targets.json settings/insulin_sensitivities.json settings/basal_profile.json preferences.json settings/carb_ratios.json settings/temptargets.json --model=settings/model.json --autotune settings/autotune.json | jq . > settings/profile.json.new || die "Couldn't refresh profile"
